@@ -24,9 +24,13 @@ std::vector<int> primesUnderN(int num)
     // marks all multiples of # as false
     for (int i{ 2 }; i < limit; ++i) 
     {
-        for (int j{ i * i }; j < num; j += i) 
-        {
-            isPrime[j] = 0;
+        if (isPrime[i] == 0) {
+            continue;
+        } else {
+            for (int j{ i * i }; j < num; j += i)
+            {
+                isPrime[j] = 0;
+            }
         }
     }
     
@@ -56,3 +60,4 @@ int main()
     return 0;
     
 }
+
