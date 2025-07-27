@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <random>
+
 
 // Handles user input
 const int getInt() 
@@ -11,13 +13,24 @@ const int getInt()
     return num;
 }
 
+// 
+int modPow(int base, int exp, int mod) {
+    int result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = static_cast<int>((1LL * result * base) % mod);
+        base = static_cast<int>((1LL * base * base) % mod);
+        exp /= 2;
+    }
+    return result;
+}
+
+
+// Sieve of Eratosthenes: calculates all primes up to n
 std::vector<int> primesUnderN(int num) 
 {
-    int isPrime[num];
-	
-	for (int i{ 0 }; i < num; ++i) {
-	    isPrime[i] = 1;
-	}
+    std::vector<int> isPrime(num, 1);
 
     const int limit = static_cast<int>(std::sqrt(num));
     
@@ -43,19 +56,83 @@ std::vector<int> primesUnderN(int num)
     return primes;
 }
 
+
+// Miller-Rabin Test to determine whether a number is prime or not
+bool millerRabinTest(int num, int k) {
+    // Obvious prime tests
+    if (num <=1) return false;
+    if (num == 2) return true;
+    if (num % 2 == 0) return false;
+
+    int d{ num - 1 };
+    int s{ 0 };
+
+    while (d % 2 == 0) {
+        d /= 2;
+        s += 1;
+    }
+
+    std::random_device rd;  // a seed source for the random number engine
+    std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> distrib(2, num - 2);
+
+
+    // Miller-Rabin algorithm
+    for (int i{ 0 }; i < k; ++i) {
+        int a{ distrib(gen) };
+        int x{ modPow(a, d, num) };
+        if (x == 1 || x == num - 1) continue;
+
+        bool witness = true;
+        for (int r = 1; r < s; ++r) {
+            x = modPow(x, 2, num);
+            if (x == num - 1) {
+                witness = false;
+                break;
+            }
+        }
+        if (witness) return false;
+    }
+    return true;
+
+}
+
+// Returns all prime factors of num (including num)
+std::vector<int> primeFactors(int num, std::vector<int> primes)
+{
+    std::vector<int> primefacts{};
+    for (int i{ 0 }; i < primes.size(); ++i) {
+        if (num % primes[i] == 0) primefacts.push_back(primes[i]);
+    }
+    primefacts.push_back(num);
+    return primefacts;
+}
+
+
 int main() 
 {
     
 	const int num{ getInt() };
     
     std::vector<int> primes{ primesUnderN(num) };
+    std::vector<int> primeFactor{ primeFactors(num, primes) };
     
-    
-    // ouput primes 
+    //ouput primes 
     for (int p : primes) {
         std::cout << p << ' ';
     }
     
+    std::cout << "\n";
+    
+    if (millerRabinTest(num, 100)) {
+        std::cout << "prime\n";
+    } else {
+        std::cout << "composite\n";
+    }
+    
+    for (int p : primeFactor) {
+        std::cout << p << ' ';
+    }
     std::cout << "\n";
     return 0;
     
